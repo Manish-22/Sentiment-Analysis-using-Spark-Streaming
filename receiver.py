@@ -11,10 +11,9 @@ conf=SparkConf()
 conf.setAppName("BigData")
 sc=SparkContext.getOrCreate(conf=conf)
 
-ssc=StreamingContext(sc,2)
+ssc=StreamingContext(sc,5)
 
 dataStream=ssc.socketTextStream("localhost",6100)
-dataStream.pprint()
 ssc.start()
 ssc.awaitTermination()
 ssc.stop()
