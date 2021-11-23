@@ -35,7 +35,7 @@ def rdd_print(time,rdd):
 	print(f"===================={str(time)}===============")
 	b = rdd.flatMap(lambda l: l.split('\\n",'))
 	a = b.map(lambda l:l[2:])
-	a = a.map(lambda l:l.split(',',2))		# split only by first ,
+	a = a.map(lambda l:l.split(',',1))		# split only by first ,
 	
 	if a.isEmpty():
 		pass
