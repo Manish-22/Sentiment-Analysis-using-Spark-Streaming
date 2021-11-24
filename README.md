@@ -7,4 +7,4 @@ Create two terminals and run the following commands seperately
 
 `/opt/spark/bin/spark-submit receiver.py > log.txt `
 
-`python3 stream.py -b 500`
+`python3 stream.py -f sentiment -b 500`

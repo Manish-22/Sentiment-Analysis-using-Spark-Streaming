@@ -1,1 +1,158 @@
-/usr/bin/python3: can't open file '/home/pes1ug19cs262/Machine-Learning-with-Spark-Streaming/receiver.py': [Errno 2] No such file or directory
+====================2021-11-24 21:58:55===============
++----+--------------------+--------------------+--------------------+--------------------+-----+
+|col1|                col2|               words|                  tf|            features|label|
++----+--------------------+--------------------+--------------------+--------------------+-----+
+|   0| but theres alway...|[, but, theres, a...|(65536,[14243,339...|(65536,[14243,339...|  0.0|
+|   0|#inaperfectworld ...|[#inaperfectworld...|(65536,[1109,9207...|(65536,[1109,9207...|  0.0|
+|   0|... just had dinn...|[..., just, had, ...|(65536,[649,1531,...|(65536,[649,1531,...|  0.0|
+|   0|3 weeks to go!!! ...|[3, weeks, to, go...|(65536,[1198,3171...|(65536,[1198,3171...|  0.0|
+|   0|4 more days of wo...|[4, more, days, o...|(65536,[17603,224...|(65536,[17603,224...|  0.0|
+|   0|@AdamParnell what...|[@adamparnell, wh...|(65536,[875,2973,...|(65536,[875,2973,...|  0.0|
+|   0|@Brecape aww. I'm...|[@brecape, aww., ...|(65536,[10014,118...|(65536,[10014,118...|  0.0|
+|   0|@BrotherElijah ha...|[@brotherelijah, ...|(65536,[2707,7772...|(65536,[2707,7772...|  0.0|
+|   0|@DAMNlookatHIM DA...|[@damnlookathim, ...|(65536,[2973,1573...|(65536,[2973,1573...|  0.0|
+|   0|@DAZ081068 oooops...|[@daz081068, oooo...|(65536,[32,232,15...|(65536,[32,232,15...|  0.0|
+|   0|@Eriyanna that su...|[@eriyanna, that,...|(65536,[6212,9787...|(65536,[6212,9787...|  0.0|
+|   0|@GameShifta @ThaN...|[@gameshifta, @th...|(65536,[12475,188...|(65536,[12475,188...|  0.0|
+|   0|@HeyBrittany33 We...|[@heybrittany33, ...|(65536,[6783,1165...|(65536,[6783,1165...|  0.0|
+|   0|@JessicaSunner I ...|[@jessicasunner, ...|(65536,[1880,1981...|(65536,[1880,1981...|  0.0|
+|   0|@Julian_Obubo I d...|[@julian_obubo, i...|(65536,[4398,9859...|(65536,[4398,9859...|  0.0|
+|   0|@Kaye_Lovely But ...|[@kaye_lovely, bu...|(65536,[4851,5946...|(65536,[4851,5946...|  0.0|
+|   0|@Kgonhergrind hea...|[@kgonhergrind, h...|(65536,[737,5581,...|(65536,[737,5581,...|  0.0|
+|   0|@KimKardashian I'...|[@kimkardashian, ...|(65536,[8339,8538...|(65536,[8339,8538...|  0.0|
+|   0|@LilMissAMT I'm d...|[@lilmissamt, i'm...|(65536,[5923,7221...|(65536,[5923,7221...|  0.0|
+|   0|@MsJuicy313  You'...|[@msjuicy313, , y...|(65536,[3941,1415...|(65536,[3941,1415...|  0.0|
++----+--------------------+--------------------+--------------------+--------------------+-----+
+only showing top 20 rows
+
+Not working An error occurred while calling o1483.count.
+: org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 211.0 failed 1 times, most recent failure: Lost task 0.0 in stage 211.0 (TID 195) (10.0.2.15 executor driver): org.apache.spark.SparkException: Failed to execute user defined function(StringIndexerModel$$Lambda$3062/378975170: (string) => double)
+	at org.apache.spark.sql.catalyst.expressions.GeneratedClass$GeneratedIteratorForCodegenStage1.agg_doAggregateWithoutKey_0$(Unknown Source)
+	at org.apache.spark.sql.catalyst.expressions.GeneratedClass$GeneratedIteratorForCodegenStage1.processNext(Unknown Source)
+	at org.apache.spark.sql.execution.BufferedRowIterator.hasNext(BufferedRowIterator.java:43)
+	at org.apache.spark.sql.execution.WholeStageCodegenExec$$anon$1.hasNext(WholeStageCodegenExec.scala:755)
+	at scala.collection.Iterator$$anon$10.hasNext(Iterator.scala:458)
+	at org.apache.spark.shuffle.sort.BypassMergeSortShuffleWriter.write(BypassMergeSortShuffleWriter.java:132)
+	at org.apache.spark.shuffle.ShuffleWriteProcessor.write(ShuffleWriteProcessor.scala:59)
+	at org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:99)
+	at org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:52)
+	at org.apache.spark.scheduler.Task.run(Task.scala:131)
+	at org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$3(Executor.scala:497)
+	at org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:1439)
+	at org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:500)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+Caused by: org.apache.spark.SparkException: Unseen label: Sentiment. To handle unseen labels, set Param handleInvalid to keep.
+	at org.apache.spark.ml.feature.StringIndexerModel.$anonfun$getIndexer$1(StringIndexer.scala:406)
+	at org.apache.spark.ml.feature.StringIndexerModel.$anonfun$getIndexer$1$adapted(StringIndexer.scala:391)
+	... 16 more
+
+Driver stacktrace:
+	at org.apache.spark.scheduler.DAGScheduler.failJobAndIndependentStages(DAGScheduler.scala:2258)
+	at org.apache.spark.scheduler.DAGScheduler.$anonfun$abortStage$2(DAGScheduler.scala:2207)
+	at org.apache.spark.scheduler.DAGScheduler.$anonfun$abortStage$2$adapted(DAGScheduler.scala:2206)
+	at scala.collection.mutable.ResizableArray.foreach(ResizableArray.scala:62)
+	at scala.collection.mutable.ResizableArray.foreach$(ResizableArray.scala:55)
+	at scala.collection.mutable.ArrayBuffer.foreach(ArrayBuffer.scala:49)
+	at org.apache.spark.scheduler.DAGScheduler.abortStage(DAGScheduler.scala:2206)
+	at org.apache.spark.scheduler.DAGScheduler.$anonfun$handleTaskSetFailed$1(DAGScheduler.scala:1079)
+	at org.apache.spark.scheduler.DAGScheduler.$anonfun$handleTaskSetFailed$1$adapted(DAGScheduler.scala:1079)
+	at scala.Option.foreach(Option.scala:407)
+	at org.apache.spark.scheduler.DAGScheduler.handleTaskSetFailed(DAGScheduler.scala:1079)
+	at org.apache.spark.scheduler.DAGSchedulerEventProcessLoop.doOnReceive(DAGScheduler.scala:2445)
+	at org.apache.spark.scheduler.DAGSchedulerEventProcessLoop.onReceive(DAGScheduler.scala:2387)
+	at org.apache.spark.scheduler.DAGSchedulerEventProcessLoop.onReceive(DAGScheduler.scala:2376)
+	at org.apache.spark.util.EventLoop$$anon$1.run(EventLoop.scala:49)
+	at org.apache.spark.scheduler.DAGScheduler.runJob(DAGScheduler.scala:868)
+	at org.apache.spark.SparkContext.runJob(SparkContext.scala:2196)
+	at org.apache.spark.SparkContext.runJob(SparkContext.scala:2217)
+	at org.apache.spark.SparkContext.runJob(SparkContext.scala:2236)
+	at org.apache.spark.SparkContext.runJob(SparkContext.scala:2261)
+	at org.apache.spark.rdd.RDD.$anonfun$collect$1(RDD.scala:1030)
+	at org.apache.spark.rdd.RDDOperationScope$.withScope(RDDOperationScope.scala:151)
+	at org.apache.spark.rdd.RDDOperationScope$.withScope(RDDOperationScope.scala:112)
+	at org.apache.spark.rdd.RDD.withScope(RDD.scala:414)
+	at org.apache.spark.rdd.RDD.collect(RDD.scala:1029)
+	at org.apache.spark.sql.execution.SparkPlan.executeCollect(SparkPlan.scala:390)
+	at org.apache.spark.sql.Dataset.$anonfun$count$1(Dataset.scala:3006)
+	at org.apache.spark.sql.Dataset.$anonfun$count$1$adapted(Dataset.scala:3005)
+	at org.apache.spark.sql.Dataset.$anonfun$withAction$1(Dataset.scala:3687)
+	at org.apache.spark.sql.execution.SQLExecution$.$anonfun$withNewExecutionId$5(SQLExecution.scala:103)
+	at org.apache.spark.sql.execution.SQLExecution$.withSQLConfPropagated(SQLExecution.scala:163)
+	at org.apache.spark.sql.execution.SQLExecution$.$anonfun$withNewExecutionId$1(SQLExecution.scala:90)
+	at org.apache.spark.sql.SparkSession.withActive(SparkSession.scala:775)
+	at org.apache.spark.sql.execution.SQLExecution$.withNewExecutionId(SQLExecution.scala:64)
+	at org.apache.spark.sql.Dataset.withAction(Dataset.scala:3685)
+	at org.apache.spark.sql.Dataset.count(Dataset.scala:3005)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at py4j.reflection.MethodInvoker.invoke(MethodInvoker.java:244)
+	at py4j.reflection.ReflectionEngine.invoke(ReflectionEngine.java:357)
+	at py4j.Gateway.invoke(Gateway.java:282)
+	at py4j.commands.AbstractCommand.invokeMethod(AbstractCommand.java:132)
+	at py4j.commands.CallCommand.execute(CallCommand.java:79)
+	at py4j.GatewayConnection.run(GatewayConnection.java:238)
+	at java.lang.Thread.run(Thread.java:748)
+Caused by: org.apache.spark.SparkException: Failed to execute user defined function(StringIndexerModel$$Lambda$3062/378975170: (string) => double)
+	at org.apache.spark.sql.catalyst.expressions.GeneratedClass$GeneratedIteratorForCodegenStage1.agg_doAggregateWithoutKey_0$(Unknown Source)
+	at org.apache.spark.sql.catalyst.expressions.GeneratedClass$GeneratedIteratorForCodegenStage1.processNext(Unknown Source)
+	at org.apache.spark.sql.execution.BufferedRowIterator.hasNext(BufferedRowIterator.java:43)
+	at org.apache.spark.sql.execution.WholeStageCodegenExec$$anon$1.hasNext(WholeStageCodegenExec.scala:755)
+	at scala.collection.Iterator$$anon$10.hasNext(Iterator.scala:458)
+	at org.apache.spark.shuffle.sort.BypassMergeSortShuffleWriter.write(BypassMergeSortShuffleWriter.java:132)
+	at org.apache.spark.shuffle.ShuffleWriteProcessor.write(ShuffleWriteProcessor.scala:59)
+	at org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:99)
+	at org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:52)
+	at org.apache.spark.scheduler.Task.run(Task.scala:131)
+	at org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$3(Executor.scala:497)
+	at org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:1439)
+	at org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:500)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	... 1 more
+Caused by: org.apache.spark.SparkException: Unseen label: Sentiment. To handle unseen labels, set Param handleInvalid to keep.
+	at org.apache.spark.ml.feature.StringIndexerModel.$anonfun$getIndexer$1(StringIndexer.scala:406)
+	at org.apache.spark.ml.feature.StringIndexerModel.$anonfun$getIndexer$1$adapted(StringIndexer.scala:391)
+	... 16 more
+
+====================2021-11-24 21:59:00===============
++----+--------------------+--------------------+--------------------+--------------------+-----+
+|col1|                col2|               words|                  tf|            features|label|
++----+--------------------+--------------------+--------------------+--------------------+-----+
+|   0| I didn't go to s...|[, i, didn't, go,...|(65536,[8225,1543...|(65536,[8225,1543...|  1.0|
+|   0| I'm supposed to ...|[, i'm, supposed,...|(65536,[8037,9243...|(65536,[8037,9243...|  1.0|
+|   0| see my depserati...|[, see, my, depse...|(65536,[1894,8538...|(65536,[1894,8538...|  1.0|
+|   0| so i might not b...|[, so, i, might, ...|(65536,[8317,1413...|(65536,[8317,1413...|  1.0|
+|   0|#coolbandsmadeunc...|[#coolbandsmadeun...|(65536,[1880,6606...|(65536,[1880,6606...|  1.0|
+|   0|&quot;in 2 weeks ...|[&quot;in, 2, wee...|(65536,[637,7733,...|(65536,[637,7733,...|  1.0|
+|   0|-- Omg I can't be...|[--, omg, i, can'...|(65536,[3734,7173...|(65536,[3734,7173...|  1.0|
+|   0|; really awful we...|[;, really, awful...|(65536,[7765,1950...|(65536,[7765,1950...|  1.0|
+|   0|@Andrew303 A sad ...|[@andrew303, a, s...|(65536,[12918,330...|(65536,[12918,330...|  1.0|
+|   0|@BBWPornAwards i ...|[@bbwpornawards, ...|(65536,[6122,6263...|(65536,[6122,6263...|  1.0|
+|   0|@CNBBRAND NO CU U...|[@cnbbrand, no, c...|(65536,[10867,112...|(65536,[10867,112...|  1.0|
+|   0|@CSI_PrintChick W...|[@csi_printchick,...|(65536,[4021,9243...|(65536,[4021,9243...|  1.0|
+|   0|@ChrisHatch I sus...|[@chrishatch, i, ...|(65536,[19036,260...|(65536,[19036,260...|  1.0|
+|   0|@ChynaDollxo My t...|[@chynadollxo, my...|(65536,[2606,3720...|(65536,[2606,3720...|  1.0|
+|   0|@JAYOJAY I'm stra...|[@jayojay, i'm, s...|(65536,[2437,4193...|(65536,[2437,4193...|  1.0|
+|   0|@KyleRhea I know ...|[@kylerhea, i, kn...|(65536,[2442,9859...|(65536,[2442,9859...|  1.0|
+|   0|@Nutgurl chat? ch...|[@nutgurl, chat?,...|(65536,[1765,8225...|(65536,[1765,8225...|  1.0|
+|   0|@Phoenix165 That'...|[@phoenix165, tha...|(65536,[2685,1221...|(65536,[2685,1221...|  1.0|
+|   0|@Samm_xo Today yeah |[@samm_xo, today,...|(65536,[16529,335...|(65536,[16529,335...|  1.0|
+|   0|@Snookk where are...|[@snookk, where, ...|(65536,[10422,183...|(65536,[10422,183...|  1.0|
++----+--------------------+--------------------+--------------------+--------------------+-----+
+only showing top 20 rows
+
+Traceback (most recent call last):
+  File "/home/pes1ug19cs262/Machine-Learning-with-Spark-Streaming/receiver.py", line 96, in <module>
+    ssc.awaitTermination()
+  File "/opt/spark/python/lib/pyspark.zip/pyspark/streaming/context.py", line 199, in awaitTermination
+  File "/opt/spark/python/lib/py4j-0.10.9-src.zip/py4j/java_gateway.py", line 1303, in __call__
+  File "/opt/spark/python/lib/py4j-0.10.9-src.zip/py4j/java_gateway.py", line 1033, in send_command
+  File "/opt/spark/python/lib/py4j-0.10.9-src.zip/py4j/java_gateway.py", line 1200, in send_command
+  File "/usr/lib/python3.8/socket.py", line 669, in readinto
+    return self._sock.recv_into(b)
+  File "/opt/spark/python/lib/pyspark.zip/pyspark/context.py", line 285, in signal_handler
+KeyboardInterrupt
