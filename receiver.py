@@ -51,7 +51,8 @@ def rdd_print(time,rdd):
 			idf = IDF(inputCol='tf', outputCol="features", minDocFreq=5) #minDocFreq: remove sparse terms
 			label_stringIdx = StringIndexer(inputCol = "col1", outputCol = "label")
 			pipeline = Pipeline(stages=[tokenizer, hashtf, idf, label_stringIdx])
-
+			
+			
 			pipelineFit = pipeline.fit(train_set)
 			train_df = pipelineFit.transform(train_set)
 			test_set_1 = pipelineFit.transform(test_set)
