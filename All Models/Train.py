@@ -120,7 +120,7 @@ def rdd_test(time,rdd):
 
 
 iter =1
-lm_model=lm.LogisticRegression(warm_start=True,maxIter=50,tol=1e-6) #high accuracy
+lm_model=lm.LogisticRegression(warm_start=True,max_iter=50,tol=1e-6) #high accuracy
 sgd_model=SGDClassifier(alpha=0.0001, loss='log', penalty='l2', n_jobs=-1, shuffle=True) #medium accuracy and medium precision
 mlp_model=MLPClassifier(random_state=42, alpha=1e-5, hidden_layer_sizes=(5, 2)) #high recall
 clus_model = MiniBatchKMeans(n_clusters=2, batch_size=1000, random_state=1)
