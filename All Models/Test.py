@@ -1,36 +1,19 @@
 import sys
-import re
-
 import pickle
 import numpy as np
 from pyspark import SparkContext
 from pyspark.sql.context import SQLContext
 from pyspark.sql import Row
 from pyspark.streaming import StreamingContext
-from pyspark.mllib.clustering import KMeans, KMeansModel, StreamingKMeans
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
 from pyspark.sql.functions import udf
-import operator
-from pyspark.ml.feature import HashingTF, IDF, Tokenizer
+from pyspark.ml.feature import HashingTF
 from pyspark.ml.feature import StringIndexer
 from pyspark.ml import Pipeline
-from pyspark.ml.classification import LogisticRegression
-from pyspark.ml.evaluation import BinaryClassificationEvaluator
-from pyspark.ml.feature import CountVectorizer
-from pyspark.ml.feature import NGram, VectorAssembler
-from pyspark.ml.feature import ChiSqSelector
 from pyspark.sql.functions import when 
-from pyspark.ml.classification import GBTClassifier
-from pyspark.ml.tuning import ParamGridBuilder, TrainValidationSplit
-from pyspark.ml.classification import MultilayerPerceptronClassifier
-from pyspark.ml.feature import CountVectorizer, StopWordsRemover, Word2Vec, RegexTokenizer
-
-from sklearn.linear_model import SGDClassifier
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.neural_network import MLPClassifier
+from pyspark.ml.feature import RegexTokenizer
 from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix
-
 import matplotlib.pyplot as plt
 
 
@@ -40,12 +23,10 @@ sqlContext = SQLContext(sc) #required to create dataframe
 
 
 
-
-
 lines = ssc.socketTextStream("localhost", 6100)
 
 def rdd_test(time,rdd):
-    global iter, test_lm, test_sgd, test_mlp,test_mlp
+    global iter, test_lm, test_sgd, test_mlp,test_mlp,test_clus,test_mnb
     print(f"===================={str(time)}====================")
 	
     if rdd.isEmpty():
@@ -98,6 +79,26 @@ def rdd_test(time,rdd):
             print('\n\n')
             test_mlp+=accuracy_score(y,predy)
 
+            #Multinomial Naive Bayes(MNB)
+            print(f"Multinomial Bayes{iter}:")
+            predy=loaded_mnb_model.predict(X)
+            print("Accuracy:",accuracy_score(y, predy))
+            print("Precision:",precision_score(y, predy))
+            print("Recall:",recall_score(y, predy))
+            print("Confusion Matrix:",confusion_matrix(y, predy))
+            print('\n\n')
+            test_mnb+=accuracy_score(y,predy)
+
+            #K-means(Unsupervised Learning)
+            print(f"Kmeans for Batch{iter}:")
+            predy=loaded_clus_model.predict(X)
+            print("Accuracy:",accuracy_score(y, predy))
+            print("Precision:",precision_score(y, predy))
+            print("Recall:",recall_score(y, predy))
+            print("Confusion Matrix:",confusion_matrix(y, predy))
+            print('\n\n')
+            test_clus+=accuracy_score(y,predy)
+
             #print("===================Predictions===================")
 
             # accuracy = predictions.filter(predictions["label"] == predictions["prediction"]).count() / float(predictions.count())
@@ -109,18 +110,23 @@ def rdd_test(time,rdd):
             print('Somethings wrong I can feel it : ', E)
 
         iter+=1
+        if iter>=320:
+            sys.exit(0)
 
 
 test_lm=0
 test_sgd=0
 test_mlp=0
+test_mnb=0
+test_clus=0
 iter=1
 
 
 loaded_lm_model = pickle.load(open('lm_model.sav', 'rb'))
 loaded_sgd_model = pickle.load(open('sgd_model.sav', 'rb'))
 loaded_mlp_model = pickle.load(open('mlp_model.sav', 'rb'))
-
+loaded_mnb_model = pickle.load(open('mnb_model.sav', 'rb'))
+loaded_clus_model = pickle.load(open('clus_model.sav', 'rb'))
 
 
 lines = lines.flatMap(lambda l: l.split('\\n",'))
