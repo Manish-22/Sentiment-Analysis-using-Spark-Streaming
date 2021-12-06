@@ -65,34 +65,6 @@ def rdd_test(time,rdd):
             X = np.array(train_df.select('features').rdd.map(lambda x:x[0]).collect())
             y = np.array(train_df.select('label').rdd.map(lambda x:x[0]).collect())
 
-            
-            lm_model.fit(X,y)
-            predy=lm_model.predict(X)
-            print(f"Logistic regression for Batch{iter}:")
-            print("Accuracy:",accuracy_score(y, predy))
-            print("Precision:",precision_score(y, predy))
-            print("Recall:",recall_score(y, predy))
-            print("Confusion Matrix:",confusion_matrix(y, predy))
-            print('\n\n')
-
-            print(f"Stochaistic gradient descent for Batch{iter}:")
-            sgd_model.partial_fit(X,y.ravel(), classes=[0.0,1.0])
-            predy=sgd_model.predict(X)
-            print("Accuracy:",accuracy_score(y, predy))
-            print("Precision:",precision_score(y, predy))
-            print("Recall:",recall_score(y, predy))
-            print("Confusion Matrix:",confusion_matrix(y, predy))
-            print('\n\n')
-
-            print(f"Multilayer Perceptron for Batch{iter}:")
-            mlp_model.partial_fit(X,y.ravel(), classes=[0.0,1.0])
-            predy=mlp_model.predict(X)
-            print("Accuracy:",accuracy_score(y, predy))
-            print("Precision:",precision_score(y, predy))
-            print("Recall:",recall_score(y, predy))
-            print("Confusion Matrix:",confusion_matrix(y, predy))
-            print('\n\n')
-
             print(f"Kmeans for Batch{iter}:")
             clus_model.partial_fit(X)
             predy=clus_model.predict(X)
@@ -102,14 +74,6 @@ def rdd_test(time,rdd):
             print("Confusion Matrix:",confusion_matrix(y, predy))
             print('\n\n')
             
-            print(f"Multinomial Bayes{iter}:")
-            mnb_model.partial_fit(X,y, classes=[0.0,1.0])
-            predy=mnb_model.predict(X)
-            print("Accuracy:",accuracy_score(y, predy))
-            print("Precision:",precision_score(y, predy))
-            print("Recall:",recall_score(y, predy))
-            print("Confusion Matrix:",confusion_matrix(y, predy))
-            print('\n\n')
 
         except Exception as E:
             print('Somethings wrong I can feel it : ', E)
@@ -118,11 +82,10 @@ def rdd_test(time,rdd):
 
 
 iter =1
-lm_model=lm.LogisticRegression(warm_start=True)
-sgd_model=SGDClassifier(alpha=0.0001, loss='log', penalty='l2', n_jobs=-1, shuffle=True)
-mlp_model=MLPClassifier(random_state=1, max_iter=300)
+
+
 clus_model = MiniBatchKMeans(n_clusters=2, batch_size=1000, random_state=1)
-mnb_model = MultinomialNB(alpha=0.0001, fit_prior=True, class_prior=None)
+
 lines = lines.flatMap(lambda l: l.split('\\n",'))
 lines = lines.map(lambda l:l[2:])
 lines = lines.map(lambda l:l.split(',',1))		
@@ -135,11 +98,5 @@ ssc.stop()
 
 
 
-filename = 'lm_model.sav'
-pickle.dump(lm_model, open(filename, 'wb'))
-
-filename = 'sgd_model.sav'
-pickle.dump(sgd_model, open(filename, 'wb'))
-
-filename = 'mlp_model.sav'
-pickle.dump(mlp_model, open(filename, 'wb'))
+filename = 'clus_model.sav'
+pickle.dump(clus_model, open(filename, 'wb'))

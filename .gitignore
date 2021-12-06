@@ -1,5 +1,5 @@
 log.txt
-sentiment
+All Models/sentiment
 stream.py
 lm_model.sav
 mlp_model.sav
