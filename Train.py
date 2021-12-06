@@ -14,15 +14,18 @@ from pyspark.ml.feature import StringIndexer
 from pyspark.ml import Pipeline
 from sklearn.linear_model import SGDClassifier
 from pyspark.sql.functions import array
-from sklearn.naive_bayes import MultinomialNB
 from sklearn.neural_network import MLPClassifier
-from pyspark.ml.feature import CountVectorizer, StopWordsRemover, Word2Vec, RegexTokenizer
+from pyspark.ml.feature import StopWordsRemover, Word2Vec, RegexTokenizer
 from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix
 from pyspark import SparkContext
 from pyspark.sql import SQLContext
 import sklearn.linear_model as lm
+from pyspark.ml.clustering import KMeans
+from pyspark.ml.evaluation import ClusteringEvaluator
 from pyspark.sql.types import FloatType
 import sys
+from pyspark.ml.feature import StandardScaler
+from sklearn.cluster import MiniBatchKMeans
 
 sc=SparkContext.getOrCreate()
 ssc = StreamingContext(sc, 5)
@@ -49,10 +52,11 @@ def rdd_test(time,rdd):
             stage_3 = Word2Vec(inputCol= 'filtered_words', outputCol= 'features', vectorSize= 100)
             indexer = StringIndexer(inputCol="sentiment", outputCol="label", stringOrderType='alphabetAsc')
             
+
             pipeline=Pipeline(stages=[regex, remover2, stage_3, indexer])
             pipelineFit=pipeline.fit(df)
             train_df=pipelineFit.transform(df)
-            
+            print(train_df.show(5))
             X = np.array(train_df.select('features').rdd.map(lambda x:x[0]).collect())
             y = np.array(train_df.select('label').rdd.map(lambda x:x[0]).collect())
 
@@ -84,6 +88,14 @@ def rdd_test(time,rdd):
             print("Confusion Matrix:",confusion_matrix(y, predy))
             print('\n\n')
 
+            print(f"Kmeans for Batch{iter}:")
+            clus_model.partial_fit(X)
+            predy=clus_model.predict(X)
+            print("Accuracy:",accuracy_score(y, predy))
+            print("Precision:",precision_score(y, predy))
+            print("Recall:",recall_score(y, predy))
+            print("Confusion Matrix:",confusion_matrix(y, predy))
+            print('\n\n')
             
         except Exception as E:
             print('Somethings wrong I can feel it : ', E)
@@ -95,7 +107,7 @@ iter =1
 lm_model=lm.LogisticRegression(warm_start=True)
 sgd_model=SGDClassifier(alpha=0.0001, loss='log', penalty='l2', n_jobs=-1, shuffle=True)
 mlp_model=MLPClassifier(random_state=1, max_iter=300)
-
+clus_model = MiniBatchKMeans(n_clusters=2, batch_size=100, random_state=1)
 lines = lines.flatMap(lambda l: l.split('\\n",'))
 lines = lines.map(lambda l:l[2:])
 lines = lines.map(lambda l:l.split(',',1))		

@@ -46,7 +46,7 @@ lines = ssc.socketTextStream("localhost", 6100)
 
 def rdd_test(time,rdd):
     global iter, test_lm, test_sgd, test_mlp,test_mlp
-    print(f"===================={str(time)}================")
+    print(f"===================={str(time)}====================")
 	
     if rdd.isEmpty():
         pass		
