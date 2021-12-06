@@ -138,7 +138,7 @@ lines.foreachRDD(rdd_test)
 
 
 ssc.start()
-ssc.awaitTermination(100000)
+ssc.awaitTermination(60)
 ssc.stop()
 
 

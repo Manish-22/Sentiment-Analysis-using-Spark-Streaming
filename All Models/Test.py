@@ -143,6 +143,8 @@ ssc.stop()
 test_lm/=iter
 test_sgd/=iter
 test_mlp/=iter
+test_mnb/=iter
+test_clus/=iter
 
-plt.bar(['LR','SGD','MLP'],[test_lm,test_sgd,test_mlp])
+plt.bar(['LR','SGD','MLP','MNB','KMEANS'],[test_lm,test_sgd,test_mlp,test_mnb,test_clus])
 plt.show()
