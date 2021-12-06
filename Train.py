@@ -51,7 +51,7 @@ def rdd_test(time,rdd):
 
 
             tokenizer = RegexTokenizer(inputCol= 'message' , outputCol= 'tokens', pattern= '\\W')
-            hashingTf=HashingTF(inputCol=tokenizer.getOutputCol(),outputCol="features",numFeatures=1000)
+            hashingTf=HashingTF(inputCol=tokenizer.getOutputCol(),outputCol="features",numFeatures=300)
             stringIndexer=StringIndexer(inputCol="sentiment", outputCol="label")
 
 
@@ -63,6 +63,8 @@ def rdd_test(time,rdd):
 
 
             X = np.array(train_df.select('features').rdd.map(lambda x:x[0]).collect())
+            print(X)
+            print(X.shape)
             y = np.array(train_df.select('label').rdd.map(lambda x:x[0]).collect())
 
             
@@ -118,9 +120,9 @@ def rdd_test(time,rdd):
 
 
 iter =1
-lm_model=lm.LogisticRegression(warm_start=True)
-sgd_model=SGDClassifier(alpha=0.0001, loss='log', penalty='l2', n_jobs=-1, shuffle=True)
-mlp_model=MLPClassifier(random_state=1, max_iter=300)
+lm_model=lm.LogisticRegression(warm_start=True,maxIter=50,tol=1e-6) #high accuracy
+sgd_model=SGDClassifier(alpha=0.0001, loss='log', penalty='l2', n_jobs=-1, shuffle=True) #medium accuracy and medium precision
+mlp_model=MLPClassifier(random_state=42, alpha=1e-5, hidden_layer_sizes=(5, 2)) #high recall
 clus_model = MiniBatchKMeans(n_clusters=2, batch_size=1000, random_state=1)
 mnb_model = MultinomialNB(alpha=0.0001, fit_prior=True, class_prior=None)
 lines = lines.flatMap(lambda l: l.split('\\n",'))
@@ -143,3 +145,9 @@ pickle.dump(sgd_model, open(filename, 'wb'))
 
 filename = 'mlp_model.sav'
 pickle.dump(mlp_model, open(filename, 'wb'))
+
+filename = 'clus_model.sav'
+pickle.dump(clus_model, open(filename, 'wb'))
+
+filename = 'mnb_model.sav'
+pickle.dump(mnb_model, open(filename, 'wb'))
