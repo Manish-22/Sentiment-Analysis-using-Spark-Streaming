@@ -45,7 +45,7 @@ sqlContext = SQLContext(sc) #required to create dataframe
 lines = ssc.socketTextStream("localhost", 6100)
 
 def rdd_test(time,rdd):
-    global iter, test_lm, test_sgd, test_mlp,test_mlp
+    global iter, test_lm, test_sgd, test_mlp,test_mlp, test_mnb, test_clus
     print(f"===================={str(time)}====================")
 	
     if rdd.isEmpty():
@@ -68,32 +68,82 @@ def rdd_test(time,rdd):
             X = np.array(test_df.select('features').rdd.map(lambda x:x[0]).collect())
             y = np.array(test_df.select('label').rdd.map(lambda x:x[0]).collect())
 
-            predy=loaded_lm_model.predict(X)
-            print(f"Logistic regression for Batch{iter}:")
-            print("Accuracy:",accuracy_score(y, predy))
-            print("Precision:",precision_score(y, predy))
-            print("Recall:",recall_score(y, predy))
-            print("Confusion Matrix:",confusion_matrix(y, predy))
-            print('\n\n')
-            test_lm+=accuracy_score(y,predy)
+            try:
+                # loaded_lm_model.fit(X,y)
+                predy=loaded_lm_model.predict(X)
+                print(f"Logistic regression for Batch{iter}:")
+                print("Accuracy:",accuracy_score(y, predy))
+                print("Precision:",precision_score(y, predy))
+                print("Recall:",recall_score(y, predy))
+                print("Confusion Matrix:",confusion_matrix(y, predy))
+                print('\n\n')
+                test_lm+=accuracy_score(y,predy)
+            except Exception as E:
+                print('lm failed: ',E)
+                print('\n\n')
 
-            print(f"Stochaistic gradient descent for Batch{iter}:")
-            predy=loaded_sgd_model.predict(X)
-            print("Accuracy:",accuracy_score(y, predy))
-            print("Precision:",precision_score(y, predy))
-            print("Recall:",recall_score(y, predy))
-            print("Confusion Matrix:",confusion_matrix(y, predy))
-            print('\n\n')
-            test_sgd+=accuracy_score(y,predy)
 
-            print(f"Multilayer Perceptron for Batch{iter}:")
-            predy=loaded_mlp_model.predict(X)
-            print("Accuracy:",accuracy_score(y, predy))
-            print("Precision:",precision_score(y, predy))
-            print("Recall:",recall_score(y, predy))
-            print("Confusion Matrix:",confusion_matrix(y, predy))
-            print('\n\n')
-            test_mlp+=accuracy_score(y,predy)
+            try:
+                print(f"Stochaistic gradient descent for Batch{iter}:")
+                # sgd_model.partial_fit(X,y, classes=[0.0,1.0])
+                predy=loaded_sgd_model.predict(X)
+                print("Accuracy:",accuracy_score(y, predy))
+                print("Precision:",precision_score(y, predy))
+                print("Recall:",recall_score(y, predy))
+                print("Confusion Matrix:",confusion_matrix(y, predy))
+                print('\n\n')
+                test_sgd+=accuracy_score(y,predy)
+            except Exception as E:
+                print('sgd failed: ',E)
+                print('\n\n')
+
+
+            try:
+                print(f"Multilayer Perceptron for Batch{iter}:")
+                # mlp_model.partial_fit(X,y, classes=[0.0,1.0])
+                predy=loaded_mlp_model.predict(X)
+                print("Accuracy:",accuracy_score(y, predy))
+                print("Precision:",precision_score(y, predy))
+                print("Recall:",recall_score(y, predy))
+                print("Confusion Matrix:",confusion_matrix(y, predy))
+                print('\n\n')
+                test_mlp+=accuracy_score(y,predy)
+
+            except Exception as E:
+                print('mlp failed: ',E)
+                print('\n\n')
+
+
+
+            try:
+                print(f"Multinomial Bayes{iter}:")
+                # mnb_model.partial_fit(X,y, classes=[0.0,1.0])
+                predy=loaded_mnb_model.predict(X)
+                print("Accuracy:",accuracy_score(y, predy))
+                print("Precision:",precision_score(y, predy))
+                print("Recall:",recall_score(y, predy))
+                print("Confusion Matrix:",confusion_matrix(y, predy))
+                print('\n\n')
+                test_mnb+=accuracy_score(y,predy)
+
+            except Exception as E:
+                print('sgd failed: ',E)
+                print('\n\n')
+
+            try:
+                print(f"Kmeans for Batch{iter}:")
+                # clus_model.partial_fit(X)
+                predy=loaded_clus_model.predict(X)
+                print("Accuracy:",accuracy_score(y, predy))
+                print("Precision:",precision_score(y, predy))
+                print("Recall:",recall_score(y, predy))
+                print("Confusion Matrix:",confusion_matrix(y, predy))
+                print('\n\n')
+                test_clus+=accuracy_score(y,predy)
+                
+            except Exception as E:
+                print('sgd failed: ',E)
+                print('\n\n')
 
             #print("===================Predictions===================")
 
@@ -111,13 +161,16 @@ def rdd_test(time,rdd):
 test_lm=0
 test_sgd=0
 test_mlp=0
+test_mnb=0
+test_clus=0
 iter=1
 
 
 loaded_lm_model = pickle.load(open('lm_model.sav', 'rb'))
 loaded_sgd_model = pickle.load(open('sgd_model.sav', 'rb'))
 loaded_mlp_model = pickle.load(open('mlp_model.sav', 'rb'))
-
+loaded_mnb_model = pickle.load(open('mnb_model.sav', 'rb'))
+loaded_clus_model = pickle.load(open('clus_model.sav', 'rb'))
 
 
 lines = lines.flatMap(lambda l: l.split('\\n",'))
@@ -134,6 +187,8 @@ ssc.stop()
 test_lm/=iter
 test_sgd/=iter
 test_mlp/=iter
+test_mnb/=iter
+test_clus/=iter
 
-plt.bar(['LR','SGD','MLP'],[test_lm,test_sgd,test_mlp])
+plt.bar(['LR','SGD','MLP','MNB','Kmeans'],[test_lm,test_sgd,test_mlp,test_mnb,test_clus])
 plt.show()
