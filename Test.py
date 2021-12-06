@@ -2,6 +2,7 @@ import sys
 import re
 
 import pickle
+import numpy as np
 from pyspark import SparkContext
 from pyspark.sql.context import SQLContext
 from pyspark.sql import Row
@@ -23,36 +24,76 @@ from pyspark.sql.functions import when
 from pyspark.ml.classification import GBTClassifier
 from pyspark.ml.tuning import ParamGridBuilder, TrainValidationSplit
 from pyspark.ml.classification import MultilayerPerceptronClassifier
+from pyspark.ml.feature import CountVectorizer, StopWordsRemover, Word2Vec, RegexTokenizer
+
+from sklearn.linear_model import SGDClassifier
 from sklearn.naive_bayes import MultinomialNB
+from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix
+
+import matplotlib.pyplot as plt
+
 
 sc=SparkContext.getOrCreate()
 ssc = StreamingContext(sc, 5)
 sqlContext = SQLContext(sc) #required to create dataframe
 
 
+
+
+
 lines = ssc.socketTextStream("localhost", 6100)
 
-loaded_model = pickle.load(open('./model_multi.pkl', 'rb'))
 def rdd_test(time,rdd):
-
+    global iter, test_lm, test_sgd, test_mlp,test_mlp
     print(f"===================={str(time)}================")
 	
     if rdd.isEmpty():
         pass		
     else:
         try:
-            df = sqlContext.createDataFrame(rdd, ['col1','col2'])
+            df = sqlContext.createDataFrame(rdd, ['sentiment','message'])
+            df= df.filter(df.sentiment != 'Sentiment')
             df.dropna()
-            tokenizer = Tokenizer(inputCol="col2", outputCol="words")
-            hashtf = HashingTF(numFeatures=2**16, inputCol="words", outputCol='tf')
-            idf = IDF(inputCol='tf', outputCol="features", minDocFreq=5) #minDocFreq: remove sparse terms
-            label_stringIdx = StringIndexer(inputCol = "col1", outputCol = "label")
-            pipeline = Pipeline(stages=[tokenizer, hashtf, idf, label_stringIdx])
-            pipelineFit = pipeline.fit(df)
-            train_df = pipelineFit.transform(df)
-            train_df.show()
-            predictions=loaded_model.score(train_df['features'],train_df['label'])
-            print(predictions)
+
+            regex = RegexTokenizer(inputCol= 'message' , outputCol= 'tokens', pattern= '\\W')
+            remover2 = StopWordsRemover(inputCol= 'tokens', outputCol= 'filtered_words')
+            stage_3 = Word2Vec(inputCol= 'filtered_words', outputCol= 'features', vectorSize= 100)
+            indexer = StringIndexer(inputCol="sentiment", outputCol="label", stringOrderType='alphabetAsc')
+            
+            pipeline=Pipeline(stages=[regex, remover2, stage_3, indexer])
+            pipelineFit=pipeline.fit(df)
+            test_df=pipelineFit.transform(df)
+
+            X = np.array(test_df.select('features').rdd.map(lambda x:x[0]).collect())
+            y = np.array(test_df.select('label').rdd.map(lambda x:x[0]).collect())
+
+            predy=loaded_lm_model.predict(X)
+            print(f"Logistic regression for Batch{iter}:")
+            print("Accuracy:",accuracy_score(y, predy))
+            print("Precision:",precision_score(y, predy))
+            print("Recall:",recall_score(y, predy))
+            print("Confusion Matrix:",confusion_matrix(y, predy))
+            print('\n\n')
+            test_lm+=accuracy_score(y,predy)
+
+            print(f"Stochaistic gradient descent for Batch{iter}:")
+            predy=loaded_sgd_model.predict(X)
+            print("Accuracy:",accuracy_score(y, predy))
+            print("Precision:",precision_score(y, predy))
+            print("Recall:",recall_score(y, predy))
+            print("Confusion Matrix:",confusion_matrix(y, predy))
+            print('\n\n')
+            test_sgd+=accuracy_score(y,predy)
+
+            print(f"Multilayer Perceptron for Batch{iter}:")
+            predy=loaded_mlp_model.predict(X)
+            print("Accuracy:",accuracy_score(y, predy))
+            print("Precision:",precision_score(y, predy))
+            print("Recall:",recall_score(y, predy))
+            print("Confusion Matrix:",confusion_matrix(y, predy))
+            print('\n\n')
+            test_mlp+=accuracy_score(y,predy)
 
             #print("===================Predictions===================")
 
@@ -64,6 +105,20 @@ def rdd_test(time,rdd):
         except Exception as E:
             print('Somethings wrong I can feel it : ', E)
 
+        iter+=1
+
+
+test_lm=0
+test_sgd=0
+test_mlp=0
+iter=1
+
+
+loaded_lm_model = pickle.load(open('lm_model.sav', 'rb'))
+loaded_sgd_model = pickle.load(open('sgd_model.sav', 'rb'))
+loaded_mlp_model = pickle.load(open('mlp_model.sav', 'rb'))
+
+
 
 lines = lines.flatMap(lambda l: l.split('\\n",'))
 lines = lines.map(lambda l:l[2:])
@@ -74,3 +129,11 @@ lines.foreachRDD(rdd_test)
 ssc.start()
 ssc.awaitTermination(60)
 ssc.stop()
+
+
+test_lm/=iter
+test_sgd/=iter
+test_mlp/=iter
+
+plt.bar(['LR','SGD','MLP'],[test_lm,test_sgd,test_mlp])
+plt.show()
