@@ -26,10 +26,8 @@ from pyspark.ml.classification import MultilayerPerceptronClassifier
 from sklearn.naive_bayes import MultinomialNB
 
 sc=SparkContext.getOrCreate()
-
 ssc = StreamingContext(sc, 5)
-
-sqlContext = SQLContext(sc)
+sqlContext = SQLContext(sc) #required to create dataframe
 
 
 lines = ssc.socketTextStream("localhost", 6100)
@@ -37,7 +35,7 @@ lines = ssc.socketTextStream("localhost", 6100)
 loaded_model = pickle.load(open('./model_multi.pkl', 'rb'))
 def rdd_test(time,rdd):
 
-    print(f"===================={str(time)}===============")
+    print(f"===================={str(time)}================")
 	
     if rdd.isEmpty():
         pass		
@@ -45,8 +43,6 @@ def rdd_test(time,rdd):
         try:
             df = sqlContext.createDataFrame(rdd, ['col1','col2'])
             df.dropna()
-
-			# (train_set, test_set) = df.randomSplit([0.8, 0.2], seed = 123)
             tokenizer = Tokenizer(inputCol="col2", outputCol="words")
             hashtf = HashingTF(numFeatures=2**16, inputCol="words", outputCol='tf')
             idf = IDF(inputCol='tf', outputCol="features", minDocFreq=5) #minDocFreq: remove sparse terms
@@ -55,23 +51,25 @@ def rdd_test(time,rdd):
             pipelineFit = pipeline.fit(df)
             train_df = pipelineFit.transform(df)
             train_df.show()
-            evaluator = BinaryClassificationEvaluator(rawPredictionCol='prediction', labelCol='label', metricName='areaUnderROC' )
-
             predictions=loaded_model.score(train_df['features'],train_df['label'])
             print(predictions)
+
+            #print("===================Predictions===================")
+
             # accuracy = predictions.filter(predictions["label"] == predictions["prediction"]).count() / float(predictions.count())
             # auc = evaluator.evaluate(predictions, {evaluator.metricName: "areaUnderROC"})
-
             # print("Accuracy Score: {0:.4f}".format(accuracy))
             # print("ROC-AUC: {0:.4f}".format(auc))
 
         except Exception as E:
             print('Somethings wrong I can feel it : ', E)
 
+
 lines = lines.flatMap(lambda l: l.split('\\n",'))
 lines = lines.map(lambda l:l[2:])
 lines = lines.map(lambda l:l.split(',',1))		# split only by first ,
 lines.foreachRDD(rdd_test)
+
 
 ssc.start()
 ssc.awaitTermination(60)
