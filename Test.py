@@ -56,17 +56,20 @@ def rdd_test(time,rdd):
             df= df.filter(df.sentiment != 'Sentiment')
             df.dropna()
 
-            regex = RegexTokenizer(inputCol= 'message' , outputCol= 'tokens', pattern= '\\W')
-            remover2 = StopWordsRemover(inputCol= 'tokens', outputCol= 'filtered_words')
-            stage_3 = Word2Vec(inputCol= 'filtered_words', outputCol= 'features', vectorSize= 100)
-            indexer = StringIndexer(inputCol="sentiment", outputCol="label", stringOrderType='alphabetAsc')
-            
-            pipeline=Pipeline(stages=[regex, remover2, stage_3, indexer])
-            pipelineFit=pipeline.fit(df)
-            test_df=pipelineFit.transform(df)
 
-            X = np.array(test_df.select('features').rdd.map(lambda x:x[0]).collect())
-            y = np.array(test_df.select('label').rdd.map(lambda x:x[0]).collect())
+            tokenizer = RegexTokenizer(inputCol= 'message' , outputCol= 'tokens', pattern= '\\W')
+            hashingTf=HashingTF(inputCol=tokenizer.getOutputCol(),outputCol="features",numFeatures=1000)
+            stringIndexer=StringIndexer(inputCol="sentiment", outputCol="label")
+
+
+
+            pipeline=Pipeline(stages=[tokenizer,hashingTf,stringIndexer])
+            pipelineFit=pipeline.fit(df)
+            train_df=pipelineFit.transform(df)
+            print(train_df.show(5))
+
+            X = np.array(train_df.select('features').rdd.map(lambda x:x[0]).collect())
+            y = np.array(train_df.select('label').rdd.map(lambda x:x[0]).collect())
 
             predy=loaded_lm_model.predict(X)
             print(f"Logistic regression for Batch{iter}:")
