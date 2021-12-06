@@ -39,7 +39,7 @@ def rdd_test(time,rdd):
 
 
             tokenizer = RegexTokenizer(inputCol= 'message' , outputCol= 'tokens', pattern= '\\W')
-            hashingTf=HashingTF(inputCol=tokenizer.getOutputCol(),outputCol="features",numFeatures=1000)
+            hashingTf=HashingTF(inputCol=tokenizer.getOutputCol(),outputCol="features",numFeatures=300)
             stringIndexer=StringIndexer(inputCol="sentiment", outputCol="label")
 
 
