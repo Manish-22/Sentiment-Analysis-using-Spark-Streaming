@@ -1,4 +1,5 @@
 import sys
+import numpy as np
 import re
 
 import pickle
@@ -24,6 +25,7 @@ from pyspark.ml.classification import GBTClassifier
 from pyspark.ml.tuning import ParamGridBuilder, TrainValidationSplit
 from pyspark.ml.classification import MultilayerPerceptronClassifier
 from sklearn.naive_bayes import MultinomialNB
+from pyspark.ml.feature import CountVectorizer, StopWordsRemover, Word2Vec, RegexTokenizer
 import pandas as pd
 #spark=SparkSession.builder.appName("biG DATA").getOrCreate()
 from pyspark import SparkContext
@@ -33,39 +35,57 @@ from pyspark.sql.types import FloatType
 import pyspark.sql.functions as F
 import sys
 
+from stream import sendPokemonBatchFileToSpark
+
 sc=SparkContext.getOrCreate()
+ssc = StreamingContext(sc, 5)
 sqlContext = SQLContext(sc)
 
-
-df = sqlContext.read.option("header",True).csv('sentiment/smalltrain.csv')
-#print(df.show(5))
-df_train,df_test=df.randomSplit([0.8,0.2])
-tokenizer = Tokenizer(inputCol="Tweet", outputCol="words")
-hashtf = HashingTF(numFeatures=2**16, inputCol="words", outputCol='tf')
-idf = IDF(inputCol='tf', outputCol="features", minDocFreq=5) #minDocFreq: remove sparse terms
-label_stringIdx = StringIndexer(inputCol = "Sentiment", outputCol = "label")
-pipeline = Pipeline(stages=[tokenizer, hashtf, idf, label_stringIdx])
-pipelineFit = pipeline.fit(df)
-train_df = pipelineFit.transform(df)
-train_df=train_df.select("label","features")
+lines = ssc.socketTextStream("localhost", 6100)
 
 
 
+def rdd_test(time,rdd):
 
-lr= LogisticRegression(maxIter=10, regParam=0.3, elasticNetParam=0.8)
-lrModel = lr.fit(train_df)
+    print(f"===================={str(time)}===============")
+	
+    if rdd.isEmpty():
+        pass		
+    else:
+        try:
+            df = sqlContext.createDataFrame(rdd, ['sentiment','message'])
+            df= df.filter(df.sentiment != 'Sentiment')
+            df.dropna()
+            #df.show()
 
-print("Coefficients: " + str(lrModel.coefficients))
-print("Intercept: " + str(lrModel.intercept))
-		
+            regex = RegexTokenizer(inputCol= 'message' , outputCol= 'tokens', pattern= '\\W')
+            remover2 = StopWordsRemover(inputCol= 'tokens', outputCol= 'filtered_words')
+            stage_3 = Word2Vec(inputCol= 'filtered_words', outputCol= 'features', vectorSize= 100)
+            indexer = StringIndexer(inputCol="sentiment", outputCol="label", stringOrderType='alphabetAsc')
+            
+            pipeline=Pipeline(stages=[regex, remover2, stage_3, indexer])
+            pipelineFit=pipeline.fit(df)
+            train_df=pipelineFit.transform(df)
+            
+
+            X= train_df.select(['features'])
+            y= train_df.select(['label'])
+            X.show()
+            X = np.array(X.select('features').rdd.map(lambda x:x[0]).collect())
+            y = np.array(y.select('label').rdd.map(lambda x:x[0]).collect())
+
+            print(X,y,sep="\n")
+            print(len(X),len(y),sep="\n")
+
+        except Exception as E:
+            print('Somethings wrong I can feel it : ', E)
+
+lines = lines.flatMap(lambda l: l.split('\\n",'))
+lines = lines.map(lambda l:l[2:])
+lines = lines.map(lambda l:l.split(',',1))		# split only by first ,
+lines.foreachRDD(rdd_test)
 
 
-
-
-# lines = lines.flatMap(lambda l: l.split('\\n",'))
-# lines = lines.map(lambda l:l[2:])
-# lines = lines.map(lambda l:l.split(',',1))		# split only by first ,
-# lines.foreachRDD(rdd_print)
-
-# pickle.dump(model_multi, open("./model_multi.pkl", "wb"))
-
+ssc.start()
+ssc.awaitTermination(60)
+ssc.stop()
