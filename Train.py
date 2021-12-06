@@ -5,37 +5,24 @@ import re
 import pickle
 from pyspark import SparkContext
 from pyspark.sql.context import SQLContext
-from pyspark.sql import Row
 from pyspark.streaming import StreamingContext
 from pyspark.mllib.clustering import KMeans, KMeansModel, StreamingKMeans
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
 from pyspark.sql.functions import udf
-import operator
-from pyspark.ml.feature import HashingTF, IDF, Tokenizer
 from pyspark.ml.feature import StringIndexer
 from pyspark.ml import Pipeline
-from pyspark.ml.classification import LogisticRegression
-from pyspark.ml.evaluation import BinaryClassificationEvaluator
-from pyspark.ml.feature import CountVectorizer
-from pyspark.ml.feature import NGram, VectorAssembler
-from pyspark.ml.feature import ChiSqSelector
-from pyspark.sql.functions import when 
-from pyspark.ml.classification import GBTClassifier
-from pyspark.ml.tuning import ParamGridBuilder, TrainValidationSplit
-from pyspark.ml.classification import MultilayerPerceptronClassifier
+from sklearn.linear_model import SGDClassifier
+from pyspark.sql.functions import array
 from sklearn.naive_bayes import MultinomialNB
+from sklearn.neural_network import MLPClassifier
 from pyspark.ml.feature import CountVectorizer, StopWordsRemover, Word2Vec, RegexTokenizer
-import pandas as pd
-#spark=SparkSession.builder.appName("biG DATA").getOrCreate()
+from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix
 from pyspark import SparkContext
 from pyspark.sql import SQLContext
-
+import sklearn.linear_model as lm
 from pyspark.sql.types import FloatType
-import pyspark.sql.functions as F
 import sys
-
-from stream import sendPokemonBatchFileToSpark
 
 sc=SparkContext.getOrCreate()
 ssc = StreamingContext(sc, 5)
@@ -56,7 +43,6 @@ def rdd_test(time,rdd):
             df = sqlContext.createDataFrame(rdd, ['sentiment','message'])
             df= df.filter(df.sentiment != 'Sentiment')
             df.dropna()
-            #df.show()
 
             regex = RegexTokenizer(inputCol= 'message' , outputCol= 'tokens', pattern= '\\W')
             remover2 = StopWordsRemover(inputCol= 'tokens', outputCol= 'filtered_words')
@@ -67,22 +53,44 @@ def rdd_test(time,rdd):
             pipelineFit=pipeline.fit(df)
             train_df=pipelineFit.transform(df)
             
+            X = np.array(train_df.select('features').rdd.map(lambda x:x[0]).collect())
+            y = np.array(train_df.select('label').rdd.map(lambda x:x[0]).collect())
 
-            X= train_df.select(['features'])
-            y= train_df.select(['label'])
-            X.show()
-            X = np.array(X.select('features').rdd.map(lambda x:x[0]).collect())
-            y = np.array(y.select('label').rdd.map(lambda x:x[0]).collect())
+            
+            model_lm.fit(X,y)
+            predy=model_lm.predict(X)
+            print("Accuracy:",accuracy_score(y, predy))
+            print("Precision:",precision_score(y, predy))
+            print("Recall:",recall_score(y, predy))
+            print("Confusion Matrix:",confusion_matrix(y, predy))
 
-            print(X,y,sep="\n")
-            print(len(X),len(y),sep="\n")
+
+            model_sgd.partial_fit(X,y.ravel(), classes=[0.0,1.0])
+            predy=model_sgd.predict(X)
+            print("Accuracy:",accuracy_score(y, predy))
+            print("Precision:",precision_score(y, predy))
+            print("Recall:",recall_score(y, predy))
+            print("Confusion Matrix:",confusion_matrix(y, predy))
+
+
+            
+            model_mlp.partial_fit(X,y.ravel(), classes=[0.0,1.0])
+            predy=model_mlp.predict(X)
+            print("Accuracy:",accuracy_score(y, predy))
+            print("Precision:",precision_score(y, predy))
+            print("Recall:",recall_score(y, predy))
+            print("Confusion Matrix:",confusion_matrix(y, predy))
 
         except Exception as E:
             print('Somethings wrong I can feel it : ', E)
 
+model_lm=lm.LogisticRegression(warm_start=True)
+model_sgd=SGDClassifier(alpha=0.0001, loss='log', penalty='l2', n_jobs=-1, shuffle=True)
+model_mlp=MLPClassifier(random_state=1, max_iter=300)
+
 lines = lines.flatMap(lambda l: l.split('\\n",'))
 lines = lines.map(lambda l:l[2:])
-lines = lines.map(lambda l:l.split(',',1))		# split only by first ,
+lines = lines.map(lambda l:l.split(',',1))		
 lines.foreachRDD(rdd_test)
 
 
