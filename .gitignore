@@ -1,3 +1,7 @@
 log.txt
 sentiment
 stream.py
+lm_model.sav
+mlp_model.sav
+sgd_model.sav
+__pycache__
