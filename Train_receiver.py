@@ -24,80 +24,48 @@ from pyspark.ml.classification import GBTClassifier
 from pyspark.ml.tuning import ParamGridBuilder, TrainValidationSplit
 from pyspark.ml.classification import MultilayerPerceptronClassifier
 from sklearn.naive_bayes import MultinomialNB
-
+import pandas as pd
 #spark=SparkSession.builder.appName("biG DATA").getOrCreate()
+from pyspark import SparkContext
+from pyspark.sql import SQLContext
+
+from pyspark.sql.types import FloatType
+import pyspark.sql.functions as F
+import sys
 
 sc=SparkContext.getOrCreate()
-
-ssc = StreamingContext(sc, 5)
-
 sqlContext = SQLContext(sc)
 
 
-lines = ssc.socketTextStream("localhost", 6100)
+df = sqlContext.read.option("header",True).csv('sentiment/smalltrain.csv')
+#print(df.show(5))
+df_train,df_test=df.randomSplit([0.8,0.2])
+tokenizer = Tokenizer(inputCol="Tweet", outputCol="words")
+hashtf = HashingTF(numFeatures=2**16, inputCol="words", outputCol='tf')
+idf = IDF(inputCol='tf', outputCol="features", minDocFreq=5) #minDocFreq: remove sparse terms
+label_stringIdx = StringIndexer(inputCol = "Sentiment", outputCol = "label")
+pipeline = Pipeline(stages=[tokenizer, hashtf, idf, label_stringIdx])
+pipelineFit = pipeline.fit(df)
+train_df = pipelineFit.transform(df)
+train_df=train_df.select("label","features")
 
-model_multi = MultinomialNB()
-def rdd_print(time,rdd):
-	
-	print(f"===================={str(time)}===============")
-	
-	if rdd.isEmpty():
-		pass		
-	else:
-		try:
-			df = sqlContext.createDataFrame(rdd, ['col1','col2'])
-			df.dropna()
 
-			# (train_set, test_set) = df.randomSplit([0.8, 0.2], seed = 123)
-			tokenizer = Tokenizer(inputCol="col2", outputCol="words")
-			hashtf = HashingTF(numFeatures=2**16, inputCol="words", outputCol='tf')
-			idf = IDF(inputCol='tf', outputCol="features", minDocFreq=5) #minDocFreq: remove sparse terms
-			label_stringIdx = StringIndexer(inputCol = "col1", outputCol = "label")
-			pipeline = Pipeline(stages=[tokenizer, hashtf, idf, label_stringIdx])
-			pipelineFit = pipeline.fit(df)
-			train_df = pipelineFit.transform(df)
 
-			model_multi.partial_fit(train_df['features'], train_df['label'], classes=['0','1'])
+
+lr= LogisticRegression(maxIter=10, regParam=0.3, elasticNetParam=0.8)
+lrModel = lr.fit(train_df)
+
+print("Coefficients: " + str(lrModel.coefficients))
+print("Intercept: " + str(lrModel.intercept))
 		
-			# lr = LogisticRegression()
-
-			# paramGrid = (ParamGridBuilder() \
-			# 				.addGrid(lr.regParam, [0.1, 0.01]) \
-			# 				.addGrid(lr.fitIntercept, [False, True]) \
-			# 				.build())
-
-			# # Evaluate model
-			# evaluator = BinaryClassificationEvaluator(rawPredictionCol='prediction', labelCol='label', metricName='areaUnderROC' )
-
-			# tvs = TrainValidationSplit(estimator=lr,
-			# 						estimatorParamMaps=paramGrid,
-			# 						evaluator=evaluator,
-			# 						trainRatio=0.8)
-
-			# lrModel = tvs.fit(train_df)
-
-			# predictions = lrModel.transform(test_set_1)
-
-			# accuracy = predictions.filter(predictions["label"] == predictions["prediction"]).count() / float(predictions.count())
-			# auc = evaluator.evaluate(predictions, {evaluator.metricName: "areaUnderROC"})
-
-			# print("Accuracy Score: {0:.4f}".format(accuracy))
-			# print("ROC-AUC: {0:.4f}".format(auc))
-		
-		except Exception as e:
-			print('Not working',e)
 
 
 
 
-lines = lines.flatMap(lambda l: l.split('\\n",'))
-lines = lines.map(lambda l:l[2:])
-lines = lines.map(lambda l:l.split(',',1))		# split only by first ,
-lines.foreachRDD(rdd_print)
+# lines = lines.flatMap(lambda l: l.split('\\n",'))
+# lines = lines.map(lambda l:l[2:])
+# lines = lines.map(lambda l:l.split(',',1))		# split only by first ,
+# lines.foreachRDD(rdd_print)
 
-pickle.dump(model_multi, open("./model_multi.pkl", "wb"))
-
-ssc.start()
-ssc.awaitTermination(100)
-ssc.stop()
+# pickle.dump(model_multi, open("./model_multi.pkl", "wb"))
 
